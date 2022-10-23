@@ -41,17 +41,15 @@ class TodoItem {
         endDate = map['endDate'] as String,
         isDone = map['isDone'] as bool;
 
-
   Map<String, dynamic> toJsonMap() => {
         'id': id,
         'tripname': tripname,
-        'startloc' : startloc,
-        'endloc':endloc,
-        'triptype' :triptype,
-        'startDate' :startDate,
-        'endDate':endDate,
+        'startloc': startloc,
+        'endloc': endloc,
+        'triptype': triptype,
+        'startDate': startDate,
+        'endDate': endDate,
         'isDone': isDone,
-
       };
 }
 
@@ -70,7 +68,7 @@ class _NewTripState extends State<NewTrip> {
   late Database _db;
   late StoreRef<int, Map<String, dynamic>> _store;
   List<TodoItem> _todos = [];
-  
+
   @override
   void initState() {
     super.initState();
@@ -130,7 +128,6 @@ class _NewTripState extends State<NewTrip> {
     print('Updated $count records in db.');
   }
 
-
   String? tripname;
   String? startloc;
   String? endloc;
@@ -140,12 +137,20 @@ class _NewTripState extends State<NewTrip> {
   String? endDate;
   bool? isDone = false;
 
+  String dropdownvalue = 'Family Trip';
+  // List of items in our dropdown menu
+  var items = [
+    'Vacation',
+    'Office Trip',
+    'Short Outing',
+  ];
   //String? _emcontactname;
   //int? _emcontactnum;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: const Color.fromRGBO(3, 9, 23, 1),
       //drawer: theDrawer(context),
       //drawerEnableOpenDragGesture: true,
@@ -180,82 +185,123 @@ class _NewTripState extends State<NewTrip> {
           color: Colors.black,
         ),
         onPressed: () {
-          Navigator.pushNamed(context, 'NewTrip');
+          TodoItem data = TodoItem(
+              tripname: tripname,
+              startloc: startloc,
+              endloc: endloc,
+              triptype: triptype,
+              startDate: startDate,
+              endDate: endDate);
+          _addTodoItem(data);
+          Navigator.pushNamed(context, 'HomePage');
         },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      body: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
-        TextFormField(
-          textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(
-            border: UnderlineInputBorder(),
-            filled: true,
-            //icon: Icon(Icons.person),
-            fillColor: Colors.grey,
-            hintText: 'What do you want to name the trip',
-            labelText: 'Name of Trip',
+      body: Container(
+        height: MediaQuery.of(context).size.height * 0.9,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
+          TextFormField(
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(
+              border: UnderlineInputBorder(),
+              filled: true,
+              //icon: Icon(Icons.person),
+              fillColor: Colors.grey,
+              hintText: 'What do you want to name the trip',
+              labelText: 'Name of Trip',
+            ),
+            onSaved: (String? value) {
+              this.tripname = value;
+              //print('name=$startloc');
+            },
           ),
-          onSaved: (String? value) {
-            this.tripname = value;
-            //print('name=$startloc');
-          },
-        ),
-        const SizedBox(
-          height: 40,
-        ),
-        TextFormField(
-          textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(
-            border: UnderlineInputBorder(),
-            filled: true,
-            //icon: Icon(Icons.person),
-            fillColor: Colors.grey,
-            hintText: 'Where do you plan to start?',
-            labelText: 'Start Location',
+          const SizedBox(
+            height: 40,
           ),
-          onSaved: (String? value) {
-            this.startloc = value;
-            //print('name=$startloc');
-          },
-        ),
-        TextFormField(
-          textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(
-            border: UnderlineInputBorder(),
-            filled: true,
-            fillColor: Colors.grey,
-            //icon: Icon(Icons.person),
-            hintText: 'What is your destination?',
-            labelText: 'Destination',
+          TextFormField(
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(
+              border: UnderlineInputBorder(),
+              filled: true,
+              //icon: Icon(Icons.person),
+              fillColor: Colors.grey,
+              hintText: 'Where do you plan to start?',
+              labelText: 'Start Location',
+            ),
+            onSaved: (String? value) {
+              this.startloc = value;
+              //print('name=$startloc');
+            },
           ),
-          onSaved: (String? value) {
-            this.endloc = value;
-            print('name=$endloc');
-          },
-        ),
-        const SizedBox(
-          height: 40,
-        ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
-          onPressed: () {
-            showDateRangePicker(
-              context: context,
-              firstDate: DateTime(2018),
-              lastDate: DateTime(2025),
-            ).then((DateTimeRange? value) {
-              if (value != null) {
-                DateTimeRange _fromRange =
-                    DateTimeRange(start: DateTime.now(), end: DateTime.now());
-                _fromRange = value;
-                this.startDate = DateFormat.yMMMd().format(_fromRange.start);
-                this.endDate = DateFormat.yMMMd().format(_fromRange.end);
-              }
-            });
-          },
-          child: const Text('Dates of Trip'),
-        ),
-      ]),
+          TextFormField(
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(
+              border: UnderlineInputBorder(),
+              filled: true,
+              fillColor: Colors.grey,
+              //icon: Icon(Icons.person),
+              hintText: 'What is your destination?',
+              labelText: 'Destination',
+            ),
+            onSaved: (String? value) {
+              this.endloc = value;
+              print('name=$endloc');
+            },
+          ),
+          const SizedBox(
+            height: 40,
+          ),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+            Text(
+              "Trip Type:",
+              style: GoogleFonts.playfairDisplay(color: Colors.white),
+            ),
+            DropdownButton(
+                // Initial Value
+                value: triptype,
+                // Down Arrow Icon
+                icon: const Icon(Icons.keyboard_arrow_down),
+
+                // Array list of items
+                items: items.map((String items) {
+                  return DropdownMenuItem(
+                    value: items,
+                    child: Text(items),
+                  );
+                }).toList(),
+                // After selecting the desired option,it will
+                // change button value to selected value
+                onChanged: (String? newValue) {
+                  setState(() {
+                    dropdownvalue = newValue!;
+                    triptype = dropdownvalue;
+                  });
+                }),
+            const SizedBox(
+              height: 40,
+            ),
+          ]),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
+            onPressed: () {
+              showDateRangePicker(
+                context: context,
+                firstDate: DateTime(2018),
+                lastDate: DateTime(2025),
+              ).then((DateTimeRange? value) {
+                if (value != null) {
+                  DateTimeRange _fromRange =
+                      DateTimeRange(start: DateTime.now(), end: DateTime.now());
+                  _fromRange = value;
+                  this.startDate = DateFormat.yMMMd().format(_fromRange.start);
+                  this.endDate = DateFormat.yMMMd().format(_fromRange.end);
+                }
+              });
+            },
+            child: const Text('Dates of Trip'),
+          ),
+        ]),
+      ),
     );
   }
 }
