@@ -1,6 +1,7 @@
 # TRIP TALES 
+<img src="banner.jpg" width="100%" height="100%"> 
+ <img src="app.png" width="30%" height="30%"> 
 
-<img src="app.png" width="30%" height="30%">
 
 ## module 1 - homepage/newtrip
 - trip type and group formation (vacation, work, home)
