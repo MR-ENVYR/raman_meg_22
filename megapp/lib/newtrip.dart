@@ -7,6 +7,54 @@ import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:sembast/sembast.dart';
 import 'package:sembast/sembast_io.dart';
 
+class TodoItem {
+  final int? id;
+  String? tripname;
+  String? startloc;
+  String? endloc;
+  String? triptype;
+  //int? _travelnos;
+  String? startDate;
+  String? endDate;
+  bool? isDone;
+  //String? _emcontactname;
+  //int? _emcontactnum;
+
+  TodoItem({
+    this.id,
+    required this.tripname,
+    required this.startloc,
+    required this.endloc,
+    required this.triptype,
+    required this.startDate,
+    required this.endDate,
+    this.isDone = false,
+  });
+
+  TodoItem.fromJsonMap(Map<String, dynamic> map)
+      : id = map['id'] as int,
+        tripname = map['tripname'] as String,
+        startloc = map['startloc'] as String,
+        endloc = map['endloc'] as String,
+        triptype = map['triptype'] as String,
+        startDate = map['startDate'] as String,
+        endDate = map['endDate'] as String,
+        isDone = map['isDone'] as bool;
+
+
+  Map<String, dynamic> toJsonMap() => {
+        'id': id,
+        'tripname': tripname,
+        'startloc' : startloc,
+        'endloc':endloc,
+        'triptype' :triptype,
+        'startDate' :startDate,
+        'endDate':endDate,
+        'isDone': isDone,
+
+      };
+}
+
 class NewTrip extends StatefulWidget {
   const NewTrip({super.key});
 
@@ -15,15 +63,85 @@ class NewTrip extends StatefulWidget {
 }
 
 class _NewTripState extends State<NewTrip> {
-  String? _tripname;
-  String? _startloc;
-  String? _endloc;
-  String? _triptype;
-  int? _travelnos;
-  String? _startDate;
-  String? _endDate;
-  String? _emcontactname;
-  int? _emcontactnum;
+  static const kDbFileName = 'sembast_ex.db';
+  static const kDbStoreName = 'example_store';
+
+  late Future<bool> _initDbFuture;
+  late Database _db;
+  late StoreRef<int, Map<String, dynamic>> _store;
+  List<TodoItem> _todos = [];
+  
+  @override
+  void initState() {
+    super.initState();
+    this._initDbFuture = _initDb();
+  }
+
+  // Opens a db local file. Creates the db table if it's not yet created.
+  Future<bool> _initDb() async {
+    final dbFolder = await path_provider.getApplicationDocumentsDirectory();
+    final dbPath = join(dbFolder.path, kDbFileName);
+    this._db = await databaseFactoryIo.openDatabase(dbPath);
+    print('Db created at $dbPath');
+    this._store = intMapStoreFactory.store(kDbStoreName);
+    //_getTodoItems();
+    return true;
+  }
+
+  // Retrieves records from the db store.
+  Future<void> _getTodoItems() async {
+    final finder = Finder();
+    final recordSnapshots = await this._store.find(this._db, finder: finder);
+    this._todos = recordSnapshots
+        .map(
+          (snapshot) => TodoItem.fromJsonMap({
+            ...snapshot.value,
+            'id': snapshot.key,
+          }),
+        )
+        .toList();
+  }
+
+  // Inserts records to the db store.
+  // Note we don't need to explicitly set the primary key (id), it'll auto
+  // increment.
+  Future<void> _addTodoItem(TodoItem todo) async {
+    final int id = await this._store.add(this._db, todo.toJsonMap());
+    print('Inserted todo item with id=$id.');
+  }
+
+  // Updates records in the db table.
+  Future<void> _toggleTodoItem(TodoItem todo) async {
+    todo.isDone = todo.isDone;
+    final int count = await this._store.update(
+          this._db,
+          todo.toJsonMap(),
+          finder: Finder(filter: Filter.byKey(todo.id)),
+        );
+    print('Updated $count records in db.');
+  }
+
+  // Deletes records in the db table.
+  Future<void> _deleteTodoItem(TodoItem todo) async {
+    final int count = await this._store.delete(
+          this._db,
+          finder: Finder(filter: Filter.byKey(todo.id)),
+        );
+    print('Updated $count records in db.');
+  }
+
+
+  String? tripname;
+  String? startloc;
+  String? endloc;
+  String? triptype;
+  //int? _travelnos;
+  String? startDate;
+  String? endDate;
+  bool? isDone = false;
+
+  //String? _emcontactname;
+  //int? _emcontactnum;
 
   @override
   Widget build(BuildContext context) {
@@ -78,8 +196,8 @@ class _NewTripState extends State<NewTrip> {
             labelText: 'Name of Trip',
           ),
           onSaved: (String? value) {
-            this._tripname = value;
-            //print('name=$_startloc');
+            this.tripname = value;
+            //print('name=$startloc');
           },
         ),
         const SizedBox(
@@ -96,8 +214,8 @@ class _NewTripState extends State<NewTrip> {
             labelText: 'Start Location',
           ),
           onSaved: (String? value) {
-            this._startloc = value;
-            //print('name=$_startloc');
+            this.startloc = value;
+            //print('name=$startloc');
           },
         ),
         TextFormField(
@@ -111,8 +229,8 @@ class _NewTripState extends State<NewTrip> {
             labelText: 'Destination',
           ),
           onSaved: (String? value) {
-            this._endloc = value;
-            print('name=$_endloc');
+            this.endloc = value;
+            print('name=$endloc');
           },
         ),
         const SizedBox(
@@ -130,8 +248,8 @@ class _NewTripState extends State<NewTrip> {
                 DateTimeRange _fromRange =
                     DateTimeRange(start: DateTime.now(), end: DateTime.now());
                 _fromRange = value;
-                this._startDate = DateFormat.yMMMd().format(_fromRange.start);
-                this._endDate = DateFormat.yMMMd().format(_fromRange.end);
+                this.startDate = DateFormat.yMMMd().format(_fromRange.start);
+                this.endDate = DateFormat.yMMMd().format(_fromRange.end);
               }
             });
           },
