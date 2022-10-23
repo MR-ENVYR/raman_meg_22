@@ -7,7 +7,7 @@ import 'package:sembast/sembast.dart';
 import 'package:sembast/sembast_io.dart';
 import 'package:megapp/newtrip.dart';
 //import 'widgies.dart';
-
+import 'package:permission_handler/permission_handler.dart';
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -16,17 +16,19 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-    static const kDbFileName = 'sembast_ex.db';
+  static const kDbFileName = 'sembast_ex.db';
   static const kDbStoreName = 'example_store';
 
   late Future<bool> _initDbFuture;
   late Database _db;
   late StoreRef<int, Map<String, dynamic>> _store;
   List<TodoItem> _todos = [];
-  
+
   @override
   void initState() {
+  
     super.initState();
+
     this._initDbFuture = _initDb();
   }
 
@@ -55,65 +57,73 @@ class _HomePageState extends State<HomePage> {
         .toList();
   }
 
-  // Inserts records to the db store.
-  // Note we don't need to explicitly set the primary key (id), it'll auto
-  // increment.
-  Future<void> _addTodoItem(TodoItem todo) async {
-    final int id = await this._store.add(this._db, todo.toJsonMap());
-    print('Inserted todo item with id=$id.');
-  }
-
- 
-
-
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color.fromRGBO(3, 9, 23, 1),
-      //drawer: theDrawer(context),
-      //drawerEnableOpenDragGesture: true,
-      appBar: AppBar(
-        backgroundColor: const Color.fromRGBO(3, 9, 23, 1),
-        centerTitle: true,
-        title: Text(
-          'Homepage',
-          style: GoogleFonts.playfairDisplay(color: Colors.white),
-        ),
-      ),
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.amber,
-          shape: CircularNotchedRectangle(),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              IconButton(onPressed: () {Navigator.pushNamed(context, 'HomePage');}, icon: const Icon(Icons.trip_origin)),
-              IconButton(onPressed: () {}, icon: const Icon(Icons.money_off_rounded)),
-            ],
-          )),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.yellow.shade800,
-        child: const Icon(
-          Icons.add,
-          color: Colors.black,
-        ),
-        onPressed: () {
-          Navigator.pushNamed(context, 'NewTrip');
-        },
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      body: Container(
-        alignment: Alignment.center,
-        height: MediaQuery.of(context).size.height * 0.90,
-        width: MediaQuery.of(context).size.width,
-        child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              
-            ]),
-      ),
+    return FutureBuilder<bool>(
+      future: this._initDbFuture,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+        return Scaffold(
+          backgroundColor: const Color.fromRGBO(3, 9, 23, 1),
+          //drawer: theDrawer(context),
+          //drawerEnableOpenDragGesture: true,
+          appBar: AppBar(
+            backgroundColor: const Color.fromRGBO(3, 9, 23, 1),
+            centerTitle: true,
+            title: Text(
+              'Homepage',
+              style: GoogleFonts.playfairDisplay(color: Colors.white),
+            ),
+          ),
+          bottomNavigationBar: BottomAppBar(
+              color: Colors.amber,
+              shape: CircularNotchedRectangle(),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  IconButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, 'HomePage');
+                      },
+                      icon: const Icon(Icons.trip_origin)),
+                  IconButton(
+                      onPressed: () {},
+                      icon: const Icon(Icons.money_off_rounded)),
+                ],
+              )),
+          floatingActionButton: FloatingActionButton(
+            backgroundColor: Colors.yellow.shade800,
+            child: const Icon(
+              Icons.add,
+              color: Colors.black,
+            ),
+            onPressed: () {
+              Navigator.pushNamed(context, 'NewTrip');
+            },
+          ),
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerDocked,
+          body: ListView(
+            children: this._todos.map(_itemToListTile).toList(),
+          ),
+        );
+      },
     );
   }
+
+  Future<void> _updateUI() async {
+    await _getTodoItems();
+    setState(() {});
+  }
+
+  ListTile _itemToListTile(TodoItem todo) => ListTile(
+        title: Text(todo.tripname,
+            style: GoogleFonts.playfairDisplay(color: Colors.white)),
+      );
 }

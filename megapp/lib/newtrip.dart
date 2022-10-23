@@ -9,7 +9,7 @@ import 'package:sembast/sembast_io.dart';
 
 class TodoItem {
   final int? id;
-  String? tripname;
+  String tripname;
   String? startloc;
   String? endloc;
   String? triptype;
@@ -106,6 +106,8 @@ class _NewTripState extends State<NewTrip> {
   Future<void> _addTodoItem(TodoItem todo) async {
     final int id = await this._store.add(this._db, todo.toJsonMap());
     print('Inserted todo item with id=$id.');
+    print(todo.tripname);
+    print(todo.endloc);
   }
 
   // Updates records in the db table.
@@ -128,7 +130,7 @@ class _NewTripState extends State<NewTrip> {
     print('Updated $count records in db.');
   }
 
-  String? tripname;
+  String tripname = 'Unnamed Trip';
   String? startloc;
   String? endloc;
   String? triptype;
@@ -185,14 +187,17 @@ class _NewTripState extends State<NewTrip> {
           color: Colors.black,
         ),
         onPressed: () {
-          TodoItem data = TodoItem(
-              tripname: tripname,
-              startloc: startloc,
-              endloc: endloc,
-              triptype: triptype,
-              startDate: startDate,
-              endDate: endDate);
-          _addTodoItem(data);
+          setState(() {
+            TodoItem data = TodoItem(
+                tripname: tripname,
+                startloc: startloc,
+                endloc: endloc,
+                triptype: triptype,
+                startDate: startDate,
+                endDate: endDate);
+            _addTodoItem(data);
+          });
+
           Navigator.pushNamed(context, 'HomePage');
         },
       ),
@@ -211,7 +216,7 @@ class _NewTripState extends State<NewTrip> {
               labelText: 'Name of Trip',
             ),
             onSaved: (String? value) {
-              this.tripname = value;
+              this.tripname = value!;
               //print('name=$startloc');
             },
           ),
