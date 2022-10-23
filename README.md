@@ -1,6 +1,6 @@
 # TRIP TALES 
 
-![MicrosoftTeams-image](app.png | width=100)
+<img src="app.png" width="30%" height="30%">
 
 ### problem statement
 
